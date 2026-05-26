@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta Real Dinámica</title>
+
+    <style>
+
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e24;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            gap: 30px;
+            box-sizing: border-box;
+        }
+
+        .panel-administracion {
+            background: #2a2a35;
+            padding: 25px;
+            border-radius: 15px;
+            width: 420px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #1dd1a1;
+        }
+
+        .grupo-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .grupo-input input,
+        .grupo-input button {
+            min-width: 0;
+        }
+
+        input[type="text"] {
+            flex: 1.5;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 14px;
+            color: #000;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .btn-agregar {
+            background: #10ac84;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .btn-agregar:hover {
+            background: #1dd1a1;
+        }
+
+        .btn-reiniciar {
+            width: 100%;
+            margin-top: 10px;
+            background: #57606f;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-reiniciar:hover {
+            background: #747d8c;
+        }
+
+        .lista-participantes {
+            max-height: 250px;
+            overflow-y: auto;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+
+        .item-participante {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: #343444;
+            margin-bottom: 6px;
+            border-radius: 4px;
+        }
+
+        .btn-eliminar {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .lista-vacia {
+            color: #888;
+            text-align: center;
+            padding: 20px 0;
+            font-style: italic;
+        }
+
+        .panel-ruleta {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #2a2a35;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            width: 400px;
+        }
+
+        .ruleta-wrapper {
+            position: relative;
+            width: 340px;
+            height: 340px;
+        }
+
+        #indicador {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            z-index: 10;
+            color: #ff4757;
+        }
+
+        canvas {
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            border: 8px solid #fff;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1);
+        }
+
+        #btnGirar {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            background: #ff9f43;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        #btnGirar:hover {
+            background: #ffb142;
+        }
+
+        #anuncioGanador {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1dd1a1;
+            text-align: center;
+            min-height: 30px;
+        }
+
+        @media (max-width: 900px) {
+
+            body {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .panel-administracion,
+            .panel-ruleta {
+                width: 100%;
+                max-width: 400px;
+            }
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="panel-administracion">
+
+        <h3>Agregar Participante</h3>
+
+        <div class="grupo-input">
+
+            <input
+                type="text"
+                id="insNombre"
+                placeholder="Nombre"
+            >
+
+            <input
+                type="number"
+                id="insBoletos"
+                min="1"
+                value="1"
+            >
+
+            <button
+                class="btn-agregar"
+                id="btnAgregar"
+            >
+                Añadir
+            </button>
+
+        </div>
+
+        <h3>Lista de Boletos</h3>
+
+        <div
+            class="lista-participantes"
+            id="listaContenedor"
+        >
+        </div>
+
+        <button
+            class="btn-reiniciar"
+            id="btnReiniciar"
+        >
+            Borrar Todo
+        </button>
+
+    </div>
+
+    <div class="panel-ruleta">
+
+        <div class="ruleta-wrapper">
+
+            <div id="indicador">▼</div>
+
+            <canvas
+                id="ruletaCanvas"
+                width="500"
+                height="500"
+            ></canvas>
+
+        </div>
+
+        <button id="btnGirar">
+            Girar Ruleta
+        </button>
+
+        <div id="anuncioGanador"></div>
+
+    </div>
+
+    <script>
+
+        const canvas =
+            document.getElementById('ruletaCanvas');
+
+        const ctx =
+            canvas.getContext('2d');
+
+        const btnGirar =
+            document.getElementById('btnGirar');
+
+        const btnAgregar =
+            document.getElementById('btnAgregar');
+
+        const btnReiniciar =
+            document.getElementById('btnReiniciar');
+
+        const insNombre =
+            document.getElementById('insNombre');
+
+        const insBoletos =
+            document.getElementById('insBoletos');
+
+        const listaContenedor =
+            document.getElementById('listaContenedor');
+
+        const anuncioGanador =
+            document.getElementById('anuncioGanador');
+
+        let participantes = [];
+
+        let bolsaVirtual = [];
+
+        let girando = false;
+
+        let anguloActual = 0;
+
+        const colores = [
+            '#ff6b6b',
+            '#48dbfb',
+            '#1dd1a1',
+            '#feca57',
+            '#ff9ff3',
+            '#54a0ff',
+            '#5f27cd',
+            '#ff4757',
+            '#2e86de',
+            '#10ac84'
+        ];
+
+        function dibujarRuleta() {
+
+            const totalBoletos =
+                participantes.reduce(
+                    (sum, p) => sum + p.boletos,
+                    0
+                );
+
+            ctx.clearRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            if (totalBoletos === 0) {
+
+                ctx.fillStyle = "#343444";
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    250,
+                    250,
+                    240,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+                ctx.fillStyle = "#fff";
+
+                ctx.font = "bold 24px sans-serif";
+
+                ctx.textAlign = "center";
+
+                ctx.fillText(
+                    "Ingresa participantes",
+                    250,
+                    255
+                );
+
+                return;
+            }
+
+            let anguloInicio = 0;
+
+            bolsaVirtual = [];
+
+            participantes.forEach((p, index) => {
+
+                for (let i = 0; i < p.boletos; i++) {
+                    bolsaVirtual.push(p.nombre);
+                }
+
+                const fraccion =
+                    p.boletos / totalBoletos;
+
+                const anguloRebanada =
+                    fraccion * Math.PI * 2;
+
+                ctx.fillStyle =
+                    colores[index % colores.length];
+
+                ctx.beginPath();
+
+                ctx.moveTo(250, 250);
+
+                ctx.arc(
+                    250,
+                    250,
+                    240,
+                    anguloInicio,
+                    anguloInicio + anguloRebanada
+                );
+
+                ctx.closePath();
+
+                ctx.fill();
+
+                ctx.save();
+
+                ctx.translate(250, 250);
+
+                ctx.rotate(
+                    anguloInicio +
+                    (anguloRebanada / 2)
+                );
+
+                ctx.fillStyle = "#fff";
+
+                ctx.font = "bold 18px sans-serif";
+
+                ctx.textAlign = "right";
+
+                ctx.fillText(
+                    p.nombre,
+                    210,
+                    5
+                );
+
+                ctx.restore();
+
+                anguloInicio += anguloRebanada;
+
+            });
+
+            ctx.fillStyle = "#fff";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                250,
+                250,
+                30,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+        }
+
+        function actualizarListaUI() {
+
+            listaContenedor.innerHTML = "";
+
+            if (participantes.length === 0) {
+
+                listaContenedor.innerHTML =
+                    '<div class="lista-vacia">No hay participantes</div>';
+
+                dibujarRuleta();
+
+                return;
+            }
+
+            participantes.forEach((p, index) => {
+
+                const div =
+                    document.createElement('div');
+
+                div.className =
+                    "item-participante";
+
+                div.innerHTML = `
+                    <span>
+                        <strong>${p.nombre}</strong>
+                        (${p.boletos} bol.)
+                    </span>
+
+                    <button
+                        class="btn-eliminar"
+                        onclick="eliminarParticipante(${index})"
+                    >
+                        X
+                    </button>
+                `;
+
+                listaContenedor.appendChild(div);
+
+            });
+
+            dibujarRuleta();
+        }
+
+        btnAgregar.addEventListener('click', () => {
+
+            const nombre =
+                insNombre.value.trim();
+
+            const boletos =
+                parseInt(insBoletos.value);
+
+            if (
+                nombre === "" ||
+                isNaN(boletos) ||
+                boletos < 1
+            ) {
+                return;
+            }
+
+            participantes.push({
+                nombre: nombre,
+                boletos: boletos
+            });
+
+            insNombre.value = "";
+
+            insBoletos.value = "1";
+
+            anuncioGanador.innerText = "";
+
+            actualizarListaUI();
+
+            insNombre.focus();
+
+        });
+
+        insNombre.addEventListener('keypress', (e) => {
+
+            if (e.key === 'Enter') {
+                btnAgregar.click();
+            }
+
+        });
+
+        insBoletos.addEventListener('keypress', (e) => {
+
+            if (e.key === 'Enter') {
+                btnAgregar.click();
+            }
+
+        });
+
+        window.eliminarParticipante = function(index) {
+
+            participantes.splice(index, 1);
+
+            anuncioGanador.innerText = "";
+
+            actualizarListaUI();
+        };
+
+        btnReiniciar.addEventListener('click', () => {
+
+            participantes = [];
+
+            bolsaVirtual = [];
+
+            anuncioGanador.innerText = "";
+
+            canvas.style.transform =
+                "rotate(0deg)";
+
+            anguloActual = 0;
+
+            actualizarListaUI();
+
+        });
+
+        function calcularYAnimarRuleta(nombreGanador) {
+
+            if (girando) return;
+
+            girando = true;
+
+            anuncioGanador.innerText =
+                "Sorteando...";
+
+            const totalBoletos =
+                bolsaVirtual.length;
+
+            let indicesGanadores = [];
+
+            bolsaVirtual.forEach((nombre, index) => {
+
+                if (
+                    nombre.trim().toLowerCase() ===
+                    nombreGanador.trim().toLowerCase()
+                ) {
+                    indicesGanadores.push(index);
+                }
+
+            });
+
+            if (indicesGanadores.length === 0) {
+
+                girando = false;
+
+                anuncioGanador.innerText =
+                    "No se encontró el ganador";
+
+                return;
+            }
+
+            const boletoElegido =
+                indicesGanadores[
+                    Math.floor(
+                        Math.random() *
+                        indicesGanadores.length
+                    )
+                ];
+
+            const gradosPorBoleto =
+                360 / totalBoletos;
+
+            // Centro exacto del boleto
+            const anguloCentro =
+                (boletoElegido * gradosPorBoleto)
+                + (gradosPorBoleto / 2);
+
+            /*
+                Canvas:
+                0° derecha
+                90° abajo
+                180° izquierda
+                270° arriba
+            */
+
+            const anguloObjetivo =
+                270 - anguloCentro;
+
+            const rotacionActual =
+                anguloActual % 360;
+
+            const diferencia =
+                anguloObjetivo - rotacionActual;
+
+            const vueltas = 360 * 5;
+
+            anguloActual +=
+                vueltas + diferencia;
+
+            canvas.style.transform =
+                `rotate(${anguloActual}deg)`;
+
+            setTimeout(() => {
+
+                anuncioGanador.innerText =
+                    `🎉 Ganador: ${nombreGanador}`;
+
+                girando = false;
+
+            }, 5000);
+        }
+
+        // CLICK IZQUIERDO = ALEATORIO
+
+        btnGirar.addEventListener('click', () => {
+
+            if (girando) return;
+
+            if (participantes.length === 0) {
+
+                alert("Agrega participantes");
+
+                return;
+            }
+
+            const ganador =
+                bolsaVirtual[
+                    Math.floor(
+                        Math.random() *
+                        bolsaVirtual.length
+                    )
+                ];
+
+            calcularYAnimarRuleta(ganador);
+
+        });
+
+        // CLICK DERECHO = GABRIEL
+
+        btnGirar.addEventListener('contextmenu', (e) => {
+
+            e.preventDefault();
+
+            if (girando) return;
+
+            if (participantes.length === 0) {
+
+                alert("Agrega participantes");
+
+                return;
+            }
+
+            const existeGabriel =
+                bolsaVirtual.some(
+                    nombre =>
+                    nombre.trim().toLowerCase() === "gabriel"
+                );
+
+            if (!existeGabriel) {
+
+                alert("No existe Gabriel en la lista");
+
+                return;
+            }
+
+            calcularYAnimarRuleta("Gabriel");
+
+        });
+
+        actualizarListaUI();
+
+    </script>
+
+</body>
+
+</html>
